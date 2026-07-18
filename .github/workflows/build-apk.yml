@@ -1,4 +1,4 @@
-name: Build A99 Android APK
+name: Build Fixed A99 Android APK
 
 on:
   workflow_dispatch:
@@ -6,16 +6,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -26,16 +25,18 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: '8.9'
 
-      - name: Extract project ZIP
+      - name: Extract fixed project
         run: |
+          ZIP_FILE=$(find . -maxdepth 1 -iname '*FIXED*.zip' | head -n 1)
+          test -n "$ZIP_FILE"
+          rm -rf extracted
           mkdir extracted
-          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
           unzip -q "$ZIP_FILE" -d extracted
-          ls -la extracted/A99CricketCalendar
+          find extracted -maxdepth 2 -type f | head
 
-      - name: Build APK
+      - name: Build debug APK
         run: |
           cd extracted/A99CricketCalendar
           gradle :app:assembleDebug --no-daemon --stacktrace
@@ -43,5 +44,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: A99-Cricket-Calendar-APK
+          name: A99-Cricket-Calendar-FIXED-APK
           path: extracted/A99CricketCalendar/app/build/outputs/apk/debug/app-debug.apk
+          
