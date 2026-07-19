@@ -1,4 +1,4 @@
-name: Build A99 Cricket Calendar v1.4 APK
+name: Build Allrounder99 Cricket v1.5 APK
 
 on:
   workflow_dispatch:
@@ -28,17 +28,21 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Extract final v1.4 project
+      - name: Extract final v1.5 project
         shell: bash
         run: |
           set -euo pipefail
-          echo "Repository files:"
+          echo "Repository root files:"
           find "$GITHUB_WORKSPACE" -maxdepth 1 -type f -printf '%f\n' | sort
 
-          ZIP_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 1 -type f \( -iname "*Final*v1.4*Project*.zip" -o -iname "*v1.4*.zip" \) | head -n 1 || true)
+          ZIP_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 1 -type f \( \
+            -iname "A99_Cricket_Calendar_Final_v1.5_Project.zip" -o \
+            -iname "*Final*v1.5*Project*.zip" -o \
+            -iname "*v1.5*Project*.zip" \
+          \) | head -n 1 || true)
 
           if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: Upload A99_Cricket_Calendar_Final_v1.4_Project.zip to the repository root."
+            echo "ERROR: Upload A99_Cricket_Calendar_Final_v1.5_Project.zip to the repository root."
             exit 1
           fi
 
@@ -49,13 +53,13 @@ jobs:
           SETTINGS_FILE=$(find "$GITHUB_WORKSPACE/extracted" -type f -name "settings.gradle.kts" | head -n 1 || true)
 
           if [ -z "$SETTINGS_FILE" ]; then
-            echo "ERROR: settings.gradle.kts not found inside ZIP."
+            echo "ERROR: settings.gradle.kts was not found inside the ZIP."
             exit 1
           fi
 
           PROJECT_DIR=$(dirname "$SETTINGS_FILE")
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Android project: $PROJECT_DIR"
+          echo "Android project found at: $PROJECT_DIR"
 
       - name: Build debug APK
         shell: bash
@@ -74,11 +78,11 @@ jobs:
 
           mkdir -p "$GITHUB_WORKSPACE/output"
 
-          cp "$APK_FILE" "$GITHUB_WORKSPACE/output/A99-Cricket-Calendar-v1.4.apk"
+          cp "$APK_FILE" "$GITHUB_WORKSPACE/output/Allrounder99-Cricket-v1.5.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: A99-Cricket-Calendar-v1.4-APK
-          path: output/A99-Cricket-Calendar-v1.4.apk
+          name: Allrounder99-Cricket-v1.5-APK
+          path: output/Allrounder99-Cricket-v1.5.apk
           if-no-files-found: error
