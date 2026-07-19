@@ -46,4 +46,3 @@ jobs:
         with:
           name: A99-Cricket-Calendar-FIXED-APK
           path: extracted/A99CricketCalendar/app/build/outputs/apk/debug/app-debug.apk
-          
