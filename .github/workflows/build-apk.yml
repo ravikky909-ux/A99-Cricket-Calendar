@@ -1,4 +1,4 @@
-name: Build Allrounder99 Cricket v1.5 APK
+name: Build Allrounder99 Cricket v1.6 APK
 
 on:
   workflow_dispatch:
@@ -28,38 +28,46 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Extract final v1.5 project
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: ${{ runner.os }}-allrounder99-debug-keystore-v1
+
+      - name: Locate or extract v1.6 project
         shell: bash
         run: |
           set -euo pipefail
-          echo "Repository root files:"
-          find "$GITHUB_WORKSPACE" -maxdepth 1 -type f -printf '%f\n' | sort
 
-          ZIP_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 1 -type f \( \
-            -iname "A99_Cricket_Calendar_Final_v1.5_Project.zip" -o \
-            -iname "*Final*v1.5*Project*.zip" -o \
-            -iname "*v1.5*Project*.zip" \
-          \) | head -n 1 || true)
+          if [ -f "$GITHUB_WORKSPACE/settings.gradle.kts" ]; then
+            PROJECT_DIR="$GITHUB_WORKSPACE"
+          else
+            ZIP_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 1 -type f \( \
+              -iname "*v1.6*Project*.zip" -o \
+              -iname "*v1.6*.zip" \
+            \) | head -n 1 || true)
 
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: Upload A99_Cricket_Calendar_Final_v1.5_Project.zip to the repository root."
-            exit 1
+            if [ -z "$ZIP_FILE" ]; then
+              echo "ERROR: Upload Allrounder99_Cricket_Final_v1.6_Project.zip to the repository root."
+              exit 1
+            fi
+
+            rm -rf "$GITHUB_WORKSPACE/extracted"
+            mkdir -p "$GITHUB_WORKSPACE/extracted"
+            unzip -q "$ZIP_FILE" -d "$GITHUB_WORKSPACE/extracted"
+
+            SETTINGS_FILE=$(find "$GITHUB_WORKSPACE/extracted" -type f -name "settings.gradle.kts" | head -n 1 || true)
+
+            if [ -z "$SETTINGS_FILE" ]; then
+              echo "ERROR: settings.gradle.kts not found inside ZIP."
+              exit 1
+            fi
+
+            PROJECT_DIR=$(dirname "$SETTINGS_FILE")
           fi
 
-          rm -rf "$GITHUB_WORKSPACE/extracted"
-          mkdir -p "$GITHUB_WORKSPACE/extracted"
-          unzip -q "$ZIP_FILE" -d "$GITHUB_WORKSPACE/extracted"
-
-          SETTINGS_FILE=$(find "$GITHUB_WORKSPACE/extracted" -type f -name "settings.gradle.kts" | head -n 1 || true)
-
-          if [ -z "$SETTINGS_FILE" ]; then
-            echo "ERROR: settings.gradle.kts was not found inside the ZIP."
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$SETTINGS_FILE")
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-          echo "Android project found at: $PROJECT_DIR"
+          echo "Project: $PROJECT_DIR"
 
       - name: Build debug APK
         shell: bash
@@ -72,17 +80,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           APK_FILE="$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk"
 
           test -f "$APK_FILE"
 
           mkdir -p "$GITHUB_WORKSPACE/output"
 
-          cp "$APK_FILE" "$GITHUB_WORKSPACE/output/Allrounder99-Cricket-v1.5.apk"
+          cp "$APK_FILE" "$GITHUB_WORKSPACE/output/Allrounder99-Cricket-v1.6.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Allrounder99-Cricket-v1.5-APK
-          path: output/Allrounder99-Cricket-v1.5.apk
+          name: Allrounder99-Cricket-v1.6-APK
+          path: output/Allrounder99-Cricket-v1.6.apk
           if-no-files-found: error
